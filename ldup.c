@@ -97,6 +97,7 @@ int main_ldup(int argc, char *argv[])
 {
 	int c, clevel = -1, ret;
 	int last_tid = -1, last_pos = -1;
+	int minisize =-1;
 	BGZF *fpr, *fpw;
 	bam_hdr_t *h;
 	bam1_t *b;
@@ -107,11 +108,13 @@ int main_ldup(int argc, char *argv[])
 
 	while ((c = getopt(argc, argv, "l:")) >= 0) {
 		if (c == 'l') clevel = atoi(optarg);
+		if (c == 'ls') minisize = atoi(optarg);
 	}
 	if (optind == argc) {
 		fprintf(stderr, "Usage: lianti ldup [options] <aln.bam>\n");
 		fprintf(stderr, "Options:\n");
 		fprintf(stderr, "  -l INT    zlib compression level [zlib default]\n");
+		fprintf(stderr, "  -s INT    minimum of insert size\n");
 		return 1;
 	}
 
@@ -143,7 +146,7 @@ int main_ldup(int argc, char *argv[])
 		bam_copy1(e->b, b);
 	}
 	aux = process(q, fpw, marked, aux);
-	if (ret >= 0) {
+	if (ret >= 0 && b->core.isize >= minisize) {
 		do {
 			bam_write1(fpw, b);
 		} while (bam_read1(fpr, b) >= 0);
